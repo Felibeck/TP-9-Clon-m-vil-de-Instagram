@@ -1,13 +1,22 @@
 import { StatusBar } from 'expo-status-bar'
+import { Image } from 'expo-image'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
+import * as SplashScreen from 'expo-splash-screen'
+import { useEffect, useState } from 'react'
+import { StyleSheet, View } from 'react-native'
 import Home from './src/compontents/Home'
 import Perfil from './src/compontents/Perfil'
 import Comentarios from './src/compontents/Comentarios'
 import DetallePost from './src/compontents/DetallePost'
 import { IconHome, IconProfile } from './src/compontents/Home/icons'
+
+const logo = require('./assets/splash-icon.png')
+const DURACION_SPLASH = 1400
+
+SplashScreen.preventAutoHideAsync().catch(() => {})
 
 const Tab = createBottomTabNavigator()
 const RootStack = createNativeStackNavigator()
@@ -35,6 +44,25 @@ const Tabs = () => (
 )
 
 export default function App() {
+    const [listo, setListo] = useState(false)
+
+    useEffect(() => {
+        const temporizador = setTimeout(() => {
+            setListo(true)
+            SplashScreen.hideAsync().catch(() => {})
+        }, DURACION_SPLASH)
+
+        return () => clearTimeout(temporizador)
+    }, [])
+
+    if (!listo) {
+        return (
+            <View style={styles.splash}>
+                <Image source={logo} style={styles.splashLogo} contentFit="contain" />
+            </View>
+        )
+    }
+
     return (
         <SafeAreaProvider>
             <NavigationContainer>
@@ -49,7 +77,17 @@ export default function App() {
     )
 }
 
-const styles = {
+const styles = StyleSheet.create({
+    splash: {
+        flex: 1,
+        backgroundColor: '#0f1419',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    splashLogo: {
+        width: 140,
+        height: 140,
+    },
     tabBar: {
         position: 'absolute',
         left: 0,
@@ -62,4 +100,4 @@ const styles = {
         borderTopColor: '#31353b',
         elevation: 0,
     },
-}
+})
