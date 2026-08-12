@@ -1,6 +1,7 @@
 import { Image } from 'expo-image'
 import { useEffect, useState } from 'react'
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { fetchFeed, fetchUsuario } from '../../services/unsplashApi'
 import { BUSQUEDA, CANTIDAD_POSTS, mapearFotoAPost } from '../Home'
 
@@ -46,7 +47,7 @@ const Perfil = ({ navigation }) => {
     }, [])
 
     return (
-        <View style={styles.pantalla}>
+        <SafeAreaView style={styles.pantalla} edges={['top']}>
             <View style={styles.topBar}>
                 <Text style={styles.topBarTitulo}>{usuario?.username ? `@${usuario.username}` : 'Perfil'}</Text>
             </View>
@@ -95,7 +96,7 @@ const Perfil = ({ navigation }) => {
                     </View>
                 </ScrollView>
             )}
-        </View>
+        </SafeAreaView>
     )
 }
 

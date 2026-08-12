@@ -3,6 +3,7 @@ import { Image } from 'expo-image'
 import { useNavigation } from '@react-navigation/native'
 import { useEffect, useState } from 'react'
 import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { IconBookmark, IconComment, IconHeart, IconMenuDots, IconPlus, IconSend, IconShare } from './icons'
 import { fetchFeed } from '../../services/unsplashApi'
 
@@ -181,7 +182,7 @@ const Home = () => {
     }, [])
 
     return (
-        <View style={styles.pantalla}>
+        <SafeAreaView style={styles.pantalla} edges={['top']}>
             <View style={styles.topBar}>
                 <Image source={logo} style={styles.logo} contentFit="contain" />
                 <Text style={styles.topBarTitulo}>Instagram</Text>
@@ -205,7 +206,7 @@ const Home = () => {
                 }
                 ListEmptyComponent={cargando ? <ActivityIndicator style={styles.cargandoIndicador} color="#dfe2eb" /> : null}
             />
-        </View>
+        </SafeAreaView>
     )
 }
 

@@ -1,5 +1,6 @@
 import { Image } from 'expo-image'
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import ComentarioItem from '../ComentarioItem'
 import { generarComentarios } from '../../utils/contenidoSimulado'
 
@@ -8,7 +9,7 @@ const Comentarios = ({ route, navigation }) => {
     const comentarios = generarComentarios(post.id)
 
     return (
-        <View style={styles.pantalla}>
+        <SafeAreaView style={styles.pantalla} edges={['top', 'bottom']}>
             <View style={styles.topBar}>
                 <Pressable hitSlop={12} onPress={() => navigation.goBack()}>
                     <Text style={styles.cerrar}>✕</Text>
@@ -36,7 +37,7 @@ const Comentarios = ({ route, navigation }) => {
                     </View>
                 }
             />
-        </View>
+        </SafeAreaView>
     )
 }
 

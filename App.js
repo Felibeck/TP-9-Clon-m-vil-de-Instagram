@@ -3,7 +3,7 @@ import { Image } from 'expo-image'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as SplashScreen from 'expo-splash-screen'
 import { useEffect, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
@@ -26,22 +26,26 @@ const iconosPorPantalla = {
     Perfil: IconProfile,
 }
 
-const Tabs = () => (
-    <Tab.Navigator
-        screenOptions={({ route }) => ({
-            headerShown: false,
-            tabBarShowLabel: false,
-            tabBarStyle: styles.tabBar,
-            tabBarIcon: ({ focused }) => {
-                const Icono = iconosPorPantalla[route.name]
-                return <Icono color={focused ? '#fff' : '#6b7280'} />
-            },
-        })}
-    >
-        <Tab.Screen name="Home" component={Home} />
-        <Tab.Screen name="Perfil" component={Perfil} />
-    </Tab.Navigator>
-)
+const Tabs = () => {
+    const insets = useSafeAreaInsets()
+
+    return (
+        <Tab.Navigator
+            screenOptions={({ route }) => ({
+                headerShown: false,
+                tabBarShowLabel: false,
+                tabBarStyle: [styles.tabBar, { height: 64 + insets.bottom, paddingBottom: insets.bottom }],
+                tabBarIcon: ({ focused }) => {
+                    const Icono = iconosPorPantalla[route.name]
+                    return <Icono color={focused ? '#fff' : '#6b7280'} />
+                },
+            })}
+        >
+            <Tab.Screen name="Home" component={Home} />
+            <Tab.Screen name="Perfil" component={Perfil} />
+        </Tab.Navigator>
+    )
+}
 
 export default function App() {
     const [listo, setListo] = useState(false)
@@ -55,24 +59,22 @@ export default function App() {
         return () => clearTimeout(temporizador)
     }, [])
 
-    if (!listo) {
-        return (
-            <View style={styles.splash}>
-                <Image source={logo} style={styles.splashLogo} contentFit="contain" />
-            </View>
-        )
-    }
-
     return (
         <SafeAreaProvider>
-            <NavigationContainer>
-                <RootStack.Navigator screenOptions={{ headerShown: false }}>
-                    <RootStack.Screen name="Tabs" component={Tabs} />
-                    <RootStack.Screen name="Comentarios" component={Comentarios} options={{ presentation: 'modal' }} />
-                    <RootStack.Screen name="DetallePost" component={DetallePost} options={{ presentation: 'modal' }} />
-                </RootStack.Navigator>
-            </NavigationContainer>
-            <StatusBar style="light" />
+            {listo ? (
+                <NavigationContainer>
+                    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+                        <RootStack.Screen name="Tabs" component={Tabs} />
+                        <RootStack.Screen name="Comentarios" component={Comentarios} options={{ presentation: 'modal' }} />
+                        <RootStack.Screen name="DetallePost" component={DetallePost} options={{ presentation: 'modal' }} />
+                    </RootStack.Navigator>
+                </NavigationContainer>
+            ) : (
+                <View style={styles.splash}>
+                    <Image source={logo} style={styles.splashLogo} contentFit="contain" />
+                </View>
+            )}
+            <StatusBar style="light" backgroundColor="#0f1419" />
         </SafeAreaProvider>
     )
 }
@@ -93,7 +95,6 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        height: 64,
         paddingHorizontal: 90,
         backgroundColor: 'rgba(15,20,25,0.95)',
         borderTopWidth: 0.5,

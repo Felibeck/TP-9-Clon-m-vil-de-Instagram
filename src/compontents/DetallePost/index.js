@@ -1,6 +1,7 @@
 import { Image } from 'expo-image'
 import { useState } from 'react'
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { IconBookmark, IconComment, IconHeart, IconShare } from '../Home/icons'
 import ComentarioItem from '../ComentarioItem'
 import { generarComentarios, generarEtiquetas } from '../../utils/contenidoSimulado'
@@ -13,7 +14,7 @@ const DetallePost = ({ route, navigation }) => {
     const etiquetas = generarEtiquetas(post.descripcion)
 
     return (
-        <View style={styles.pantalla}>
+        <SafeAreaView style={styles.pantalla} edges={['top', 'bottom']}>
             <View style={styles.topBar}>
                 <Pressable hitSlop={12} onPress={() => navigation.goBack()}>
                     <Text style={styles.cerrar}>✕</Text>
@@ -75,7 +76,7 @@ const DetallePost = ({ route, navigation }) => {
                     </View>
                 }
             />
-        </View>
+        </SafeAreaView>
     )
 }
 
