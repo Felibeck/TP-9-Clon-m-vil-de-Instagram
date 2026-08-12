@@ -92,13 +92,13 @@ const PostCard = ({ post }) => {
     return (
         <View style={styles.post}>
             <View style={styles.postHeader}>
-                <View style={styles.postHeaderInfo}>
+                <Pressable style={styles.postHeaderInfo} onPress={() => navigation.navigate('Perfil')}>
                     <AvatarAnillo uri={post.avatar} size={32} variante={post.tieneHistoria ? 'gradiente' : 'vista'} />
                     <View>
                         <Text style={styles.postUsername}>{post.username}</Text>
                         {post.ubicacion && <Text style={styles.postUbicacion}>{post.ubicacion}</Text>}
                     </View>
-                </View>
+                </Pressable>
                 <Pressable hitSlop={8} style={styles.postMenuBtn}>
                     <IconMenuDots />
                 </Pressable>
