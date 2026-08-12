@@ -1,103 +1,210 @@
 import { Image } from 'expo-image'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
-import Svg, { Circle, Path } from 'react-native-svg'
+import { useEffect, useState } from 'react'
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { fetchFeed, fetchUsuario } from '../../services/unsplashApi'
+import { BUSQUEDA, CANTIDAD_POSTS, mapearFotoAPost } from '../Home'
 
-const Perfil = ({ usuario }) => {
+const BIO_POR_DEFECTO = '📸 Compartiendo lo mejor de watchGram'
+
+const formatearNumero = (numero) => {
+    if (!numero) return '0'
+    if (numero >= 1000) return `${(numero / 1000).toFixed(1)}K`
+    return `${numero}`
+}
+
+const Perfil = ({ navigation }) => {
+    const [posts, setPosts] = useState([])
+    const [usuario, setUsuario] = useState(null)
+    const [cargando, setCargando] = useState(true)
+
+    useEffect(() => {
+        let cancelado = false
+
+        const cargarPerfil = async () => {
+            try {
+                const fotosFeed = await fetchFeed(CANTIDAD_POSTS, BUSQUEDA)
+                if (cancelado) return
+                setPosts(fotosFeed.map(mapearFotoAPost))
+
+                const username = fotosFeed[0]?.user?.username
+                if (username) {
+                    const usuarioCompleto = await fetchUsuario(username)
+                    if (!cancelado) setUsuario(usuarioCompleto)
+                }
+            } catch (error) {
+                console.error('No se pudo cargar el perfil de Unsplash', error)
+            } finally {
+                if (!cancelado) setCargando(false)
+            }
+        }
+
+        cargarPerfil()
+
+        return () => {
+            cancelado = true
+        }
+    }, [])
+
     return (
-        <View style={styles.perfil}>
-            <View style={styles.fotoWrapper}>
-                <Image source={usuario.fotoPerfil} style={styles.foto} contentFit="cover" />
+        <View style={styles.pantalla}>
+            <View style={styles.topBar}>
+                <Text style={styles.topBarTitulo}>{usuario?.username ? `@${usuario.username}` : 'Perfil'}</Text>
             </View>
 
-            <View style={styles.info}>
-                <View style={styles.nombreRow}>
-                    <Text style={styles.nombre}>{usuario.nombreCompleto}</Text>
-                    <Svg width={22} height={22} viewBox="0 0 24 24" fill="#4a9eff">
-                        <Path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#4a9eff" strokeWidth={2} fill="none" />
-                    </Svg>
-                </View>
-                <Text style={styles.username}>@{usuario.username}</Text>
-                <Text style={styles.bio}>"{usuario.biografia}"</Text>
-                <View style={styles.stats}>
-                    <Text style={styles.statText}>
-                        <Text style={styles.statNumber}>{usuario.cantSeguidores}</Text> seguidores
-                    </Text>
-                    <Text style={styles.statText}>
-                        <Text style={styles.statNumber}>{usuario.cantSeguidos}</Text> seguidos
-                    </Text>
-                </View>
-                <Text style={styles.postsCount}>{usuario.cantPublicaciones} posts</Text>
-            </View>
+            {cargando ? (
+                <ActivityIndicator style={styles.cargandoIndicador} color="#dfe2eb" />
+            ) : (
+                <ScrollView contentContainerStyle={styles.contenido} showsVerticalScrollIndicator={false}>
+                    <View style={styles.encabezado}>
+                        {usuario?.profile_image?.large ? (
+                            <Image source={{ uri: usuario.profile_image.large }} style={styles.avatar} contentFit="cover" />
+                        ) : (
+                            <View style={styles.avatarPlaceholder} />
+                        )}
 
-            <Pressable style={styles.editarBtn} accessibilityLabel="Editar perfil">
-                <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={2}>
-                    <Circle cx="12" cy="8" r="4" />
-                    <Path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" />
-                    <Path d="M16.5 14.5l4 4M20.5 14.5l-4 4" />
-                </Svg>
-            </Pressable>
+                        <Text style={styles.nombre}>{usuario?.name ?? 'Usuario watchGram'}</Text>
+                        <Text style={styles.username}>@{usuario?.username ?? 'watchgram'}</Text>
+                        <Text style={styles.bio}>{usuario?.bio || BIO_POR_DEFECTO}</Text>
+
+                        <View style={styles.metricas}>
+                            <View style={styles.metrica}>
+                                <Text style={styles.metricaNumero}>{posts.length}</Text>
+                                <Text style={styles.metricaLabel}>Publicaciones</Text>
+                            </View>
+                            <View style={styles.metrica}>
+                                <Text style={styles.metricaNumero}>{formatearNumero(usuario?.total_likes)}</Text>
+                                <Text style={styles.metricaLabel}>Seguidores</Text>
+                            </View>
+                            <View style={styles.metrica}>
+                                <Text style={styles.metricaNumero}>{formatearNumero(usuario?.total_collections)}</Text>
+                                <Text style={styles.metricaLabel}>Seguidos</Text>
+                            </View>
+                        </View>
+
+                        <Pressable style={styles.editarBtn}>
+                            <Text style={styles.editarBtnTexto}>Editar perfil</Text>
+                        </Pressable>
+                    </View>
+
+                    <View style={styles.grilla}>
+                        {posts.map((post) => (
+                            <Pressable key={post.id} style={styles.grillaItem} onPress={() => navigation.navigate('DetallePost', { post })}>
+                                <Image source={{ uri: post.foto }} style={styles.grillaItemFoto} contentFit="cover" />
+                            </Pressable>
+                        ))}
+                    </View>
+                </ScrollView>
+            )}
         </View>
     )
 }
 
 const styles = StyleSheet.create({
-    perfil: {
-        padding: 16,
-        gap: 12,
+    pantalla: {
+        flex: 1,
+        backgroundColor: '#0f1419',
     },
-    fotoWrapper: {
-        alignSelf: 'center',
+    topBar: {
+        height: 56,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 16,
+        backgroundColor: 'rgba(15,20,25,0.92)',
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: 'rgba(38,42,48,0.6)',
     },
-    foto: {
+    topBarTitulo: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#dfe2eb',
+    },
+    cargandoIndicador: {
+        marginTop: 40,
+    },
+    contenido: {
+        paddingBottom: 80,
+    },
+    encabezado: {
+        alignItems: 'center',
+        gap: 4,
+        paddingHorizontal: 24,
+        paddingVertical: 20,
+    },
+    avatar: {
         width: 90,
         height: 90,
         borderRadius: 45,
+        marginBottom: 8,
     },
-    info: {
-        alignItems: 'center',
-        gap: 4,
-    },
-    nombreRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
+    avatarPlaceholder: {
+        width: 90,
+        height: 90,
+        borderRadius: 45,
+        marginBottom: 8,
+        backgroundColor: '#1c2026',
     },
     nombre: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: '700',
-        color: '#000',
+        color: '#dfe2eb',
     },
     username: {
-        fontSize: 14,
-        color: '#8e8e8e',
+        fontSize: 13,
+        color: '#bfc7d4',
     },
     bio: {
-        fontSize: 14,
-        color: '#000',
+        fontSize: 13,
+        color: '#dfe2eb',
         textAlign: 'center',
+        marginTop: 8,
     },
-    stats: {
+    metricas: {
         flexDirection: 'row',
-        gap: 16,
-        marginTop: 4,
+        gap: 32,
+        marginTop: 16,
     },
-    statText: {
-        fontSize: 13,
-        color: '#000',
+    metrica: {
+        alignItems: 'center',
+        gap: 2,
     },
-    statNumber: {
+    metricaNumero: {
+        fontSize: 15,
         fontWeight: '700',
+        color: '#dfe2eb',
     },
-    postsCount: {
-        fontSize: 13,
-        color: '#8e8e8e',
+    metricaLabel: {
+        fontSize: 11,
+        color: '#bfc7d4',
     },
     editarBtn: {
-        alignSelf: 'center',
-        borderWidth: 1,
-        borderColor: '#dbdbdb',
+        marginTop: 16,
+        width: '100%',
+        alignItems: 'center',
+        paddingVertical: 8,
         borderRadius: 8,
-        padding: 8,
+        borderWidth: 1,
+        borderColor: '#31353b',
+    },
+    editarBtnTexto: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#dfe2eb',
+    },
+    grilla: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 2,
+        paddingHorizontal: 2,
+    },
+    grillaItem: {
+        width: '32.6%',
+        aspectRatio: 1,
+        backgroundColor: '#1c2026',
+    },
+    grillaItemFoto: {
+        width: '100%',
+        height: '100%',
     },
 })
 
