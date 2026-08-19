@@ -9,7 +9,7 @@ import PostCard from '../PostCard'
 
 const logo = require('../../../assets/logo-mark.png')
 
-export const BUSQUEDA = 'luxury cars'
+export const BUSQUEDA = 'luxury watches'
 export const CANTIDAD_POSTS = 10
 const CANTIDAD_HISTORIAS = 5
 
